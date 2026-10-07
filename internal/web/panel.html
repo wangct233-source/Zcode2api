@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智云网关 · Zcode2api</title>
+<style>
+  :root{--bg:#0f1218;--panel:#171c26;--border:#262d3d;--text:#d7dde8;--dim:#8b94a7;--accent:#4f7cff;--ok:#3fb96f;--warn:#e0a34a;--err:#e05a5a;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font:14px/1.6 "Segoe UI",system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:12px;padding:16px 24px;border-bottom:1px solid var(--border)}
+  header h1{font-size:18px;font-weight:600}
+  .ver{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:2px 10px;font-size:12px;color:var(--dim)}
+  .free{color:var(--ok);font-size:12px;margin-left:auto}
+  main{flex:1;padding:24px;max-width:1100px;width:100%;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:18px}
+  .card h2{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--accent)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left}
+  th{color:var(--dim);font-weight:500}
+  .tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px}
+  .ok{background:rgba(63,185,111,.15);color:var(--ok)}
+  .warn{background:rgba(224,163,74,.15);color:var(--warn)}
+  .err{background:rgba(224,90,90,.15);color:var(--err)}
+  input,select,button{font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:7px 12px}
+  input:focus{outline:1px solid var(--accent)}
+  button{cursor:pointer}button:hover{border-color:var(--accent)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .muted{color:var(--dim);font-size:12px}
+  /* 左下角固定角标：交流群 + 作者主页 */
+  .corner{position:fixed;left:14px;bottom:52px;display:flex;flex-direction:column;gap:8px;z-index:50}
+  .corner a{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);text-decoration:none;font-size:13px;transition:.15s}
+  .corner a:hover{border-color:var(--accent);color:var(--accent)}
+  /* 打赏 */
+  #donateBtn{position:fixed;right:18px;bottom:52px;background:linear-gradient(135deg,#e0a34a,#d97706);border:none;color:#fff;border-radius:24px;padding:9px 18px;font-size:13px;box-shadow:0 2px 12px rgba(217,119,6,.4);z-index:50}
+  #donateModal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100}
+  #donateModal.show{display:flex}
+  .donate-box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:760px;width:92%;text-align:center}
+  .donate-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+  .donate-tabs button{border-radius:20px}
+  .donate-tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .donate-box img{max-width:320px;width:100%;border-radius:10px;display:none;margin:0 auto}
+  .donate-box img.active{display:block}
+  footer{padding:14px 24px;border-top:1px solid var(--border);text-align:center;color:var(--dim);font-size:12px}
+  footer b{color:var(--text);font-weight:500}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+  .kv span:nth-child(odd){color:var(--dim)}
+  #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent);border-radius:8px;padding:10px 20px;display:none;z-index:200}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ 智云网关</h1>
+  <span class="ver" id="ver">v?</span>
+  <span class="free">完全开源免费 · 收费的都是骗子</span>
+</header>
+
+<main id="main">
+  <div class="card" id="loginCard">
+    <h2>面板登录</h2>
+    <div id="lockMsg" class="muted" style="margin-bottom:10px"></div>
+    <div class="row">
+      <input type="password" id="pwd" placeholder="面板密码（ZG_PANEL_PASSWORD）" style="width:280px">
+      <button class="btn-primary" onclick="login()">登录</button>
+    </div>
+  </div>
+
+  <div id="content" style="display:none">
+    <div class="card">
+      <h2>运行状态</h2>
+      <div class="kv">
+        <span>上游 Provider</span><span id="provider">-</span>
+        <span>上游端点</span><span id="upstream">-</span>
+        <span>在飞请求</span><span id="inFlight">0</span>
+        <span>当前时间</span><span id="now">-</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>账号池</h2>
+      <table id="acctTable">
+        <thead><tr><th>名称</th><th>状态</th><th>在飞</th><th>余量</th><th>冷却/持有(秒)</th><th>最近错误</th><th>操作</th></tr></thead>
+        <tbody id="acctBody"><tr><td colspan="7" class="muted">暂无账号</td></tr></tbody>
+      </table>
+      <div class="row" style="margin-top:12px">
+        <input id="accName" placeholder="备注名" style="width:140px">
+        <select id="accKind"><option value="api_key">API Key</option><option value="jwt">JWT 凭证</option></select>
+        <input id="accSecret" placeholder="粘贴 Z.AI API Key / JWT" style="flex:1;min-width:240px">
+        <button class="btn-primary" onclick="addAccount()">添加账号</button>
+      </div>
+      <p class="muted" style="margin-top:8px">OpenAI 端点：<code id="apiHint">/v1/chat/completions</code> · 调用密钥即 config.yaml 中的 <code>auth.proxyApiKey</code></p>
+    </div>
+
+    <div class="card">
+      <h2>更新</h2>
+      <div class="row">
+        <button onclick="updateCheck()">检查更新</button>
+        <button class="btn-primary" onclick="updateApply()">一键升级（下载并替换二进制）</button>
+        <span class="muted" id="updateMsg"></span>
+      </div>
+      <p class="muted" style="margin-top:8px">Docker 部署时也可以直接拉取新镜像重建容器；二进制部署支持热更新自动替换。</p>
+    </div>
+  </div>
+</main>
+
+<!-- 左下角：交流群 + 作者主页 -->
+<div class="corner">
+  <a href="https://qm.qq.com/q/xHtxPNo5qM" target="_blank" rel="noopener">💬 交流群 539858079</a>
+  <a href="https://github.com/wangct233-source" target="_blank" rel="noopener">👤 作者主页 · wangct233-source</a>
+</div>
+
+<!-- 右下角：打赏按钮 -->
+<button id="donateBtn" onclick="showDonate()">☕ 打赏</button>
+<div id="donateModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="donate-box">
+    <h2 style="color:var(--accent);margin-bottom:14px">感谢支持 ❤️</h2>
+    <div class="donate-tabs">
+      <button id="tabWx" class="active" onclick="switchDonate('wx')">微信赞赏码</button>
+      <button id="tabAli" onclick="switchDonate('ali')">支付宝</button>
+    </div>
+    <img id="imgWx" class="active" src="/static/donate-wechat.png" alt="微信赞赏码">
+    <img id="imgAli" src="/static/donate-alipay.jpg" alt="支付宝收款码">
+    <p class="muted" style="margin-top:14px">开发与维护不易，每一份支持都是更新的动力～</p>
+  </div>
+</div>
+
+<footer>
+  <b>© 2026 ·智云-wangct233</b> · 当前版本 <span id="ver2">?</span> · 完全开源免费 · 收费的都是骗子
+</footer>
+<div id="toast"></div>
+
+<script>
+const H = {'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'};
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3000)}
+async function api(path,opts={}){const r=await fetch('/admin/api'+path,{headers:H,...opts});if(r.status===401){showLogin();throw new Error('未登录')}if(!r.ok){throw new Error((await r.text())||r.statusText)}return r.json()}
+
+function showLogin(){document.getElementById('loginCard').style.display='';document.getElementById('content').style.display='none'}
+function showMain(){document.getElementById('loginCard').style.display='none';document.getElementById('content').style.display='';refresh()}
+
+async function login(){
+  try{
+    const r=await fetch('/admin/api/login',{method:'POST',headers:H,body:JSON.stringify({password:document.getElementById('pwd').value})});
+    if(!r.ok){toast(await r.text());return}
+    showMain();
+  }catch(e){toast(e.message)}
+}
+
+async function refresh(){
+  try{
+    const st=await api('/state');
+    document.getElementById('ver').textContent=st.version;
+    document.getElementById('ver2').textContent=st.version;
+    document.getElementById('provider').textContent=st.provider;
+    document.getElementById('upstream').textContent=st.upstream;
+    document.getElementById('inFlight').textContent=st.inFlight;
+    document.getElementById('now').textContent=st.now;
+    if(st.panelLocked){document.getElementById('lockMsg').textContent='⚠ 面板未设置密码已锁定：请设置环境变量 ZG_PANEL_PASSWORD 后重启';}
+    const tb=document.getElementById('acctBody');
+    tb.innerHTML = (st.accounts&&st.accounts.length)? st.accounts.map(a=>{
+      const status = a.relogin?'<span class="tag err">需重登</span>':a.quotaHoldSec>0?'<span class="tag warn">配额持有</span>':a.cooldownSec>0?'<span class="tag warn">冷却中</span>':'<span class="tag ok">正常</span>';
+      return `<tr><td>${esc(a.name)}</td><td>${status}</td><td>${a.inFlight}</td><td>${a.quotaLeft==null?'未知':a.quotaLeft}</td><td>${Math.max(a.cooldownSec,a.quotaHoldSec).toFixed(0)}</td><td>${esc(a.lastError||'-')}</td><td><button onclick="delAccount('${a.id}')">删除</button></td></tr>`;
+    }).join('') : '<tr><td colspan="7" class="muted">暂无账号</td></tr>';
+  }catch(e){}
+}
+
+function esc(s){return String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}
+
+async function addAccount(){
+  try{
+    await api('/accounts',{method:'POST',body:JSON.stringify({name:accName.value,kind:accKind.value,secret:accSecret.value})});
+    accSecret.value='';toast('已添加');refresh();
+  }catch(e){toast(e.message)}
+}
+async function delAccount(id){
+  try{await api('/accounts/'+id,{method:'DELETE'});toast('已删除');refresh()}catch(e){toast(e.message)}
+}
+async function updateCheck(){
+  try{const r=await api('/update/check',{method:'POST'});
+    document.getElementById('updateMsg').textContent = r.latest?('发现新版本 '+r.version):('当前已是最新（'+r.version+'）');
+  }catch(e){toast(e.message)}
+}
+async function updateApply(){
+  try{const r=await api('/update/apply',{method:'POST'});
+    document.getElementById('updateMsg').textContent = r.updated?('已升级到 '+r.version+'，请重启'):r.message;
+  }catch(e){toast(e.message)}
+}
+function showDonate(){document.getElementById('donateModal').classList.add('show')}
+function switchDonate(k){
+  document.getElementById('tabWx').classList.toggle('active',k==='wx');
+  document.getElementById('tabAli').classList.toggle('active',k==='ali');
+  document.getElementById('imgWx').classList.toggle('active',k==='wx');
+  document.getElementById('imgAli').classList.toggle('active',k==='ali');
+}
+setInterval(refresh, 10000);
+refresh();
+</script>
+</body>
+</html>

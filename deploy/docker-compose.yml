@@ -1,0 +1,38 @@
+# Zcode2api · 智云网关 docker-compose 部署
+#
+# 使用：
+#   1. mkdir -p data config && docker compose up -d
+#   2. 编辑 ./config/config.yaml 或直接用下方环境变量
+#   3. 面板: http://服务器IP:17800/admin
+#
+# 升级：docker compose pull && docker compose up -d
+#      （或使用面板内「一键升级」，二进制热更新）
+
+services:
+  zcode2api:
+    image: ghcr.io/wangct233-source/zcode2api:latest
+    container_name: zcode2api
+    restart: unless-stopped
+    ports:
+      - "17800:17800"
+    environment:
+      # 监听地址（容器内必须 0.0.0.0）
+      ZG_HOST: 0.0.0.0
+      ZG_PORT: "17800"
+      # 客户端调用密钥（必设！这是你调用 /v1/chat/completions 的 key）
+      ZG_PROXY_API_KEY: "sk-请改成你自己的随机长字符串"
+      # 面板密码（必设！没有兜底密码，不设面板锁定）
+      ZG_PANEL_PASSWORD: "请改成你自己的面板密码"
+      # 跨机迁移账号库时设置固定加密种子（不设则绑定当前容器）
+      # ZG_CREDENTIAL_SECRET: "一串只有你知道的随机文本"
+      # 上游 provider：zai / bigmodel
+      ZG_PROVIDER: "zai"
+    volumes:
+      # 状态目录（账号库 AES-GCM 加密落盘）
+      - ./data:/app/data
+      # 配置文件（面板改动会写回这里）
+      - ./config:/app/config
+      - ./config/config.yaml:/app/config.yaml:ro
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }

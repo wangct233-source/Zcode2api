@@ -1,0 +1,20 @@
+# 构建产物
+zcode2api
+zcode2api.exe
+zcode2api-*
+*.old
+
+# 运行时状态（账号库加密落盘，绝不入库）
+data/
+*.json.tmp
+config.yaml
+
+# 本地测试残留
+smoke-data/
+*.log
+*-body.json
+cookie.txt
+
+# IDE
+.idea/
+.vscode/

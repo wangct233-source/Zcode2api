@@ -25,7 +25,9 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version: "1.26" }
       - name: Build
-        env: { GOOS: ${{ matrix.goos }}, GOARCH: ${{ matrix.goarch }} }
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
         run: |
           VER=${GITHUB_REF_NAME#v}
           EXT=""

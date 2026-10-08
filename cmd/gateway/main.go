@@ -57,7 +57,7 @@ func serve() {
 	fmt.Println("==============================================")
 	fmt.Println("  Zcode2api · 智云网关  version:", version)
 	fmt.Println("  完全开源免费 · 收费的都是骗子")
-	fmt.Println("  交流群 539858079 · https://github.com/wangct233-source")
+	fmt.Println("  交流群 1071892426 · https://github.com/wangct233-source")
 	fmt.Println("==============================================")
 
 	// 1. 配置文件（缺则写模板）。

@@ -99,7 +99,7 @@ docker compose up -d
 
 ## 交流
 
-- 💬 QQ 交流群：**1071892426** → [一键加群](https://qm.qq.com/q/xHtxPNo5qM)
+- 💬 QQ 交流群：**1071892426** → [一键加群](https://qm.qq.com/q/XcS6Sh8NYA)
 - 👤 作者主页：<https://github.com/wangct233-source>
 
 ---

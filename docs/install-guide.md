@@ -177,4 +177,4 @@ tar czf zcode2api-backup.tar.gz data config   # 备份（账号库为加密文�
 
 ---
 
-© 2026 ·智云-wangct233 · 交流群 1071892426 → <https://qm.qq.com/q/xHtxPNo5qM>
+© 2026 ·智云-wangct233 · 交流群 1071892426 → <https://qm.qq.com/q/XcS6Sh8NYA>

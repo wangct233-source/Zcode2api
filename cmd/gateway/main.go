@@ -112,7 +112,7 @@ func serve() {
 	go func() {
 		fmt.Printf("监听 http://%s ｜ 代理 API: /v1/chat/completions ｜ 面板: /admin\n", addr)
 		if cfg.Server.Host == "127.0.0.1" {
-			fmt.Println("提示：当前仅监听本机；容器部署请设 ZG_HOST=0.0.0.0")
+			fmt.Println("提示：当前仅监听本机，外部无法访问；如需对外请改 config.yaml 的 host 或设 ZG_HOST=0.0.0.0")
 		}
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fatal("HTTP 服务异常退出", err)

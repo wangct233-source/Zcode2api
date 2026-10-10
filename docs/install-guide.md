@@ -25,7 +25,7 @@ wget https://raw.githubusercontent.com/wangct233-source/Zcode2api/main/deploy/do
 
 ```yaml
 server:
-  host: 127.0.0.1
+  host: 0.0.0.0
   port: 17800
 provider:
   name: zai          # zai 或 bigmodel

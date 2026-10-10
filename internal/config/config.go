@@ -75,7 +75,10 @@ type Config struct {
 // Default 返回内置默认配置。
 func Default() *Config {
 	c := &Config{}
-	c.Server.Host = "127.0.0.1"
+	// 默认 0.0.0.0：服务自带鉴权（面板密码 + API Key），
+	// 绑 127.0.0.1 会让 Docker 端口映射和服务器部署"看起来起了但连不上"，
+	// 是新手最高频的部署故障。确实只想本机用的用户可改配置或设 ZG_HOST=127.0.0.1。
+	c.Server.Host = "0.0.0.0"
 	c.Server.Port = 17800
 	c.Provider.Name = "zai"
 	c.Provider.OpenAIBase = "https://api.z.ai/api/coding/paas/v4"
